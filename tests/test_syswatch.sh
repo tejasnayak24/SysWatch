@@ -14,6 +14,8 @@ printf '%s\n' "$search_output" | grep -q 'PID'
 
 $program run /bin/sh -c 'exit 0' | grep -q 'status 0'
 
+$program snapshot | grep -q 'CPU Usage:'
+
 sleep 30 &
 child=$!
 trap 'kill "$child" 2>/dev/null || true' EXIT

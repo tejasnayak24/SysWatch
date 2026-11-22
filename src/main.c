@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "cpu_monitor.h"
+#include "dashboard_ui.h"
 #include "memory_monitor.h"
 #include "monitor_thread.h"
 #include "process_launcher.h"
@@ -22,7 +23,8 @@ static void handle_watch_interrupt(int signal_number) {
 
 static void print_usage(const char *program) {
     printf("Usage:\n");
-    printf("  %s                         Show CPU and memory usage\n", program);
+    printf("  %s                         Open the interactive ncurses dashboard\n", program);
+    printf("  %s snapshot                Show a non-interactive CPU/memory snapshot\n", program);
     printf("  %s list [name]             List or filter processes\n", program);
     printf("  %s search <name>           Search processes by name\n", program);
     printf("  %s terminate <pid> [--force]  Send SIGTERM (or explicit SIGKILL)\n", program);
@@ -126,6 +128,21 @@ static int watch_command(const char *duration_text) {
     return 0;
 }
 
+static int snapshot_command(void) {
+    printf("================================\n");
+    printf("       SYSWATCH MONITOR\n");
+    printf("================================\n");
+    printf("\nMeasuring CPU usage...\n");
+    double cpu_usage = get_cpu_usage();
+    if (cpu_usage < 0) {
+        printf("Unable to retrieve CPU usage.\n");
+        return 1;
+    }
+    printf("CPU Usage: %.2f%%\n", cpu_usage);
+    get_memory_usage();
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     if (argc > 1 && (strcmp(argv[1], "help") == 0 || strcmp(argv[1], "--help") == 0)) {
         print_usage(argv[0]);
@@ -153,18 +170,10 @@ int main(int argc, char *argv[]) {
         if (argc > 3) { print_usage(argv[0]); return 1; }
         return watch_command(argc == 3 ? argv[2] : NULL);
     }
-    if (argc > 1) { print_usage(argv[0]); return 1; }
-
-    printf("================================\n");
-    printf("       SYSWATCH MONITOR\n");
-    printf("================================\n");
-    printf("\nMeasuring CPU usage...\n");
-    double cpu_usage = get_cpu_usage();
-    if (cpu_usage < 0) {
-        printf("Unable to retrieve CPU usage.\n");
-        return 1;
+    if (argc > 1 && strcmp(argv[1], "snapshot") == 0) {
+        if (argc != 2) { print_usage(argv[0]); return 1; }
+        return snapshot_command();
     }
-    printf("CPU Usage: %.2f%%\n", cpu_usage);
-    get_memory_usage();
-    return 0;
+    if (argc > 1) { print_usage(argv[0]); return 1; }
+    return run_dashboard();
 }
