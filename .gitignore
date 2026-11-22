@@ -1,0 +1,16 @@
+
+# Compiled binaries
+syswatch
+*.o
+*.out
+
+# Debug files
+core
+core.*
+
+# IDE settings
+.vscode/
+
+# Temporary files
+*.tmp
+*.log
